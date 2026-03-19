@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Login — babushka.sh</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/oat-glassed@latest/oat-glassed.min.css">
+  <style>
+    body { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+    .container { width: 100%; max-width: 380px; padding: 1rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <article>
+      <h2>babushka.sh</h2>
+      <p>Enter your password to continue.</p>
+      <output id="error" hidden></output>
+      <form id="form">
+        <label>Password
+          <input type="password" name="password" required autofocus>
+        </label>
+        <button type="submit" class="primary">Login</button>
+      </form>
+    </article>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/oat-glassed@latest/oat-glassed.min.js"></script>
+  <script>
+    document.getElementById('form').addEventListener('submit', async e => {
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(e.target));
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      const json = await res.json();
+      if (json.ok) return location.href = '/';
+      const el = document.getElementById('error');
+      el.textContent = json.error;
+      el.hidden = false;
+    });
+  </script>
+</body>
+</html>

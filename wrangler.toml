@@ -1,3 +1,17 @@
 name = "babushka-dev"
 main = "src/index.ts"
 compatibility_date = "2024-01-01"
+
+[assets]
+directory = "./static"
+binding = "ASSETS"
+
+[[kv_namespaces]]
+binding = "BABUSHKA_CONFIG"
+id = "01ab40be59f6460e896be0f1c5a42d54"
+
+# Uncomment to enable Cloudflare R2 storage:
+#   wrangler r2 bucket create babushka-storage
+[[r2_buckets]]
+binding = "BABUSHKA_STORAGE"
+bucket_name = "babushka-storage"

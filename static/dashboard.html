@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard — babushka.sh</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/oat-glassed@latest/oat-glassed.min.css">
+  <style>
+    body { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+    .container { width: 100%; max-width: 520px; padding: 1rem; }
+    .actions { display: flex; gap: 0.5rem; margin-top: 1rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <article>
+      <h2>Dashboard</h2>
+      <p>Your babushka.sh instance is running.</p>
+      <div id="loading"><span class="spinner"></span> Loading...</div>
+      <table id="info" hidden>
+        <tbody>
+          <tr><td><strong>Storage</strong></td><td id="storage-mode">—</td></tr>
+          <tr id="row-endpoint"><td><strong>Endpoint</strong></td><td id="endpoint">—</td></tr>
+          <tr id="row-bucket"><td><strong>Bucket</strong></td><td id="bucket">—</td></tr>
+          <tr id="row-region"><td><strong>Region</strong></td><td id="region">—</td></tr>
+          <tr><td><strong>Connection</strong></td><td id="status">—</td></tr>
+        </tbody>
+      </table>
+      <div class="actions">
+        <button id="test-btn" class="secondary" hidden>Test Connection</button>
+        <a href="/api/logout" role="button" class="outline">Logout</a>
+      </div>
+    </article>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/oat-glassed@latest/oat-glassed.min.js"></script>
+  <script>
+    (async () => {
+      const res = await fetch('/api/config');
+      if (!res.ok) return location.href = '/';
+      const cfg = await res.json();
+
+      document.getElementById('storage-mode').textContent =
+        cfg.storageMode === 'r2' ? 'Cloudflare R2' : 'Custom S3';
+
+      if (cfg.storageMode === 'r2') {
+        document.getElementById('row-endpoint').hidden = true;
+        document.getElementById('row-bucket').hidden = true;
+        document.getElementById('row-region').hidden = true;
+      } else {
+        document.getElementById('endpoint').textContent = cfg.s3Endpoint;
+        document.getElementById('bucket').textContent = cfg.s3Bucket;
+        document.getElementById('region').textContent = cfg.s3Region;
+      }
+
+      document.getElementById('loading').hidden = true;
+      document.getElementById('info').hidden = false;
+      document.getElementById('test-btn').hidden = false;
+    })();
+
+    document.getElementById('test-btn').addEventListener('click', async () => {
+      const btn = document.getElementById('test-btn');
+      const status = document.getElementById('status');
+      btn.disabled = true;
+      status.textContent = 'Testing...';
+      try {
+        const res = await fetch('/api/storage/test');
+        const json = await res.json();
+        status.textContent = json.ok ? 'Connected' : json.error;
+        status.style.color = json.ok ? 'var(--success)' : 'var(--danger)';
+      } catch {
+        status.textContent = 'Failed';
+        status.style.color = 'var(--danger)';
+      }
+      btn.disabled = false;
+    });
+  </script>
+</body>
+</html>

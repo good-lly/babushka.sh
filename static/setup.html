@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Setup — babushka.sh</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/oat-glassed@latest/oat-glassed.min.css">
+  <style>
+    body { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+    .container { width: 100%; max-width: 440px; padding: 1rem; }
+    .mode-group { display: flex; gap: 1rem; margin-bottom: 0.5rem; }
+    .mode-group label { display: flex; align-items: center; gap: 0.35rem; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <article>
+      <h2>Welcome to babushka.sh</h2>
+      <p>Set up your password and storage to get started.</p>
+      <output id="error" hidden></output>
+      <form id="form">
+        <label>Password
+          <input type="password" name="password" required minlength="8" placeholder="Min 8 characters">
+        </label>
+        <label>Confirm Password
+          <input type="password" name="passwordConfirm" required placeholder="Re-enter password">
+        </label>
+        <hr>
+        <input type="hidden" name="storageMode" id="storageModeInput" value="s3">
+        <div id="storage-mode" hidden>
+          <div class="mode-group">
+            <label><input type="radio" name="_mode" value="r2" checked> Cloudflare R2</label>
+            <label><input type="radio" name="_mode" value="s3"> Custom S3</label>
+          </div>
+        </div>
+        <div id="s3-fields">
+          <label>S3 Endpoint
+            <input type="url" name="s3Endpoint" required placeholder="https://s3.amazonaws.com">
+          </label>
+          <label>Bucket
+            <input type="text" name="s3Bucket" required placeholder="my-bucket">
+          </label>
+          <label>Region
+            <input type="text" name="s3Region" required placeholder="us-east-1">
+          </label>
+          <label>Access Key
+            <input type="text" name="s3AccessKey" required placeholder="AKIA...">
+          </label>
+          <label>Secret Key
+            <input type="password" name="s3SecretKey" required placeholder="Secret access key">
+          </label>
+        </div>
+        <button type="submit" class="primary">Save &amp; Continue</button>
+      </form>
+    </article>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/oat-glassed@latest/oat-glassed.min.js"></script>
+  <script>
+    const s3Fields = document.getElementById('s3-fields');
+    const s3Inputs = s3Fields.querySelectorAll('input');
+    const modeInput = document.getElementById('storageModeInput');
+
+    const setS3Visible = show => {
+      s3Fields.hidden = !show;
+      s3Inputs.forEach(i => show ? i.setAttribute('required', '') : i.removeAttribute('required'));
+    };
+
+    (async () => {
+      try {
+        const caps = await fetch('/api/capabilities').then(r => r.json());
+        if (caps.r2Available) {
+          modeInput.value = 'r2';
+          document.getElementById('storage-mode').hidden = false;
+          setS3Visible(false);
+          document.querySelectorAll('[name="_mode"]').forEach(r => {
+            r.addEventListener('change', () => {
+              modeInput.value = r.value;
+              setS3Visible(r.value === 's3');
+            });
+          });
+        }
+      } catch {}
+    })();
+
+    document.getElementById('form').addEventListener('submit', async e => {
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(e.target));
+      delete data._mode;
+      const res = await fetch('/api/setup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      const json = await res.json();
+      if (json.ok) return location.href = '/';
+      const el = document.getElementById('error');
+      el.textContent = json.error;
+      el.hidden = false;
+    });
+  </script>
+</body>
+</html>
