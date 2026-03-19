@@ -7,12 +7,12 @@
     "deploy": "wrangler deploy"
   },
   "dependencies": {
-    "hono": "^4.12.4",
-    "s3mini": "^0.9.1"
+    "@noble/hashes": "2.0.1",
+    "hono": "4.12.8",
+    "s3mini": "0.9.1"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20241224.0",
-    "typescript": "5.7.2",
+    "@cloudflare/workers-types": "^4.20260317.1",
     "wrangler": "4.75.0"
   },
   "prettier": {
